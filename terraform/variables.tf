@@ -6,10 +6,10 @@ variable "my_ip" {}
 
 
 variable "region" {
-  default = "australia-southeast1"
+  default = "asia-east1"
 }
 
 variable "zone" {
-  default = "australia-southeast1"
+  default = "asia-east1"
 }
 

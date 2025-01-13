@@ -37,4 +37,3 @@ services:
 networks:
   my_private:
     driver: bridge
-

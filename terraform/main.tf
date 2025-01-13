@@ -62,7 +62,7 @@ resource "google_compute_firewall" "qdb-firewall" {
 resource "google_compute_instance" "qdb-ubuntu" {
   name         = "qdb-ubuntu"
   machine_type = "n2d-standard-2"
-  zone         = "australia-southeast1-a"
+  zone         = "asia-east1-a"
 
   tags = ["qdb"]
 
@@ -99,7 +99,7 @@ output "public-ipv4" {
 resource "google_compute_disk" "persistent-data" {
   name = "persistent-data"
   type = "pd-balanced"
-  zone = "australia-southeast1-a"
+  zone = "asia-east1-a"
   size = "20"
 }
 
