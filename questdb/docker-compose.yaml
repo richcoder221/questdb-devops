@@ -1,0 +1,40 @@
+services:
+  questdb:
+    image: questdb/questdb:latest
+    container_name: questdb
+    restart: always
+    volumes:
+      - /questdb_zfs:/var/lib/questdb
+    networks:
+      - my_private
+    environment:
+      - QDB_LINE_DEFAULT_PARTITION_BY=YEAR
+      - QDB_CAIRO_WAL_WRITER_DATA_APPEND_PAGE_SIZE=128K
+      - QDB_CAIRO_WRITER_DATA_APPEND_PAGE_SIZE=128K
+      - QDB_CAIRO_O3_COLUMN_MEMORY_SIZE=128K
+      - QDB_CAIRO_WRITER_DATA_INDEX_KEY_APPEND_PAGE_SIZE=128K
+      - QDB_CAIRO_WRITER_DATA_INDEX_VALUE_APPEND_PAGE_SIZE=128K
+
+  envoy:
+    image: envoyproxy/envoy-contrib:v1.32-latest
+    container_name: envoy
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml:ro
+      - ./certs:/etc/envoy/certs:ro
+    ports:
+      - "9000:9000"
+      - "8812:8812"
+      - "9901:9901"
+    networks:
+      - my_private
+    depends_on:
+      - questdb
+    user: "101:101"
+    security_opt:
+      - no-new-privileges:true
+
+
+networks:
+  my_private:
+    driver: bridge
+

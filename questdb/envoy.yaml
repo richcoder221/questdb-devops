@@ -1,0 +1,97 @@
+static_resources:
+  listeners:
+  - name: https_listener
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 9000
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.http_connection_manager
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+          stat_prefix: questdb_https
+          codec_type: AUTO
+          route_config:
+            name: questdb_routes
+            virtual_hosts:
+            - name: questdb_service
+              domains: ["*"]
+              routes:
+              - match:
+                  prefix: "/"
+                route:
+                  cluster: questdb_cluster
+                  timeout: 0s
+          http_filters:
+          - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+      transport_socket:
+        name: envoy.transport_sockets.tls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+          common_tls_context:
+            tls_certificates:
+            - certificate_chain:
+                filename: "/etc/envoy/certs/cert.pem"
+              private_key:
+                filename: "/etc/envoy/certs/key.pem"
+
+  - name: postgres_listener
+    address:
+      socket_address:
+        address: 0.0.0.0
+        port_value: 8812
+    filter_chains:
+    - filters:
+      - name: envoy.filters.network.postgres_proxy
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.postgres_proxy.v3alpha.PostgresProxy
+          stat_prefix: postgres_stats
+          terminate_ssl: true
+      - name: envoy.filters.network.tcp_proxy
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+          stat_prefix: postgres_tcp
+          cluster: questdb_postgres
+      transport_socket:
+        name: envoy.transport_sockets.starttls
+        typed_config:
+          "@type": type.googleapis.com/envoy.extensions.transport_sockets.starttls.v3.StartTlsConfig
+          tls_socket_config:
+            common_tls_context:
+              tls_certificates:
+              - certificate_chain:
+                  filename: "/etc/envoy/certs/cert.pem"
+                private_key:
+                  filename: "/etc/envoy/certs/key.pem"
+
+  clusters:
+  - name: questdb_cluster
+    connect_timeout: 30s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: questdb_cluster
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: questdb
+                port_value: 9000
+
+  - name: questdb_postgres
+    connect_timeout: 30s
+    type: STRICT_DNS
+    lb_policy: ROUND_ROBIN
+    load_assignment:
+      cluster_name: questdb_postgres
+      endpoints:
+      - lb_endpoints:
+        - endpoint:
+            address:
+              socket_address:
+                address: questdb
+                port_value: 8812
