@@ -1,5 +1,5 @@
-# questdb-devops
-Quick Deployment of QuestDB with Envoy on the Cloud using Terraform and Docker
+# Deploy QuestDB with Envoy on the Cloud using Terraform and Docker
+A quick deployment template of QuestDB with Envoy as encryption on the Cloud using Terraform and Docker
 
 ## Technology Stack
 - **QuestDB**: High-performance time-series database
